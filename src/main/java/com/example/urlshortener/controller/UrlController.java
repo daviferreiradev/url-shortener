@@ -5,14 +5,16 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.example.urlshortener.dto.UrlRequestDto;
 import com.example.urlshortener.model.Url;
 import com.example.urlshortener.service.UrlService;
 
@@ -23,8 +25,8 @@ public class UrlController {
   private UrlService urlService;
 
   @PostMapping("/shorten")
-  public ResponseEntity<Url> shortenUrl(@RequestParam String url, @RequestParam(required = false) LocalDateTime expirationDate) {
-    Url shortUrl = urlService.generateShortUrl(url, expirationDate);
+  public ResponseEntity<Url> shortenUrl(@Validated @RequestBody UrlRequestDto urlRequestDto) {
+    Url shortUrl = urlService.generateShortUrl(urlRequestDto.getUrl(), urlRequestDto.getExpirationDate());
     return ResponseEntity.ok(shortUrl);
   }
 
