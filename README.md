@@ -1,130 +1,158 @@
-# Afazeres
-- Utilizar variáveis de ambiente .env
-- Saber lidar com exceções: @ControllerAdvice == filters httpException.filter.ts (semelhante ao filters do relax)
-- Testes unitários / Junit / mockito
+# Projeto Encurtador de URLs
 
+Este projeto é um serviço simples de encurtamento de URLs, desenvolvido em Java, Spring Boot e PostgreSQL.
 
-# Conceitos
+## Dockerfile
 
-# Dúvidas
-- O que cada dependência faz?
-Spring Web
-Spring Data JPA
-PostgreSQL Driver
-Lombok
-Spring Boot DevTools
-Spring Boot Actuator (para monitoramento - não sei se baixei a certa)
-Spring Boot Starter Test (não consegui baixar)
-Swagger/OpenAPI (não consegui baixar)
+A aplicação está empacotada utilizando o seguinte Dockerfile:
 
-___________________________________________________
+```Dockerfile
+FROM eclipse-temurin:17-jdk-alpine
+LABEL authors="daviferreiradev"
+VOLUME /tmp
+COPY target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+```
 
-- application.properties
-O que cada linha faz?
+## Configuração do Ambiente
 
-___________________________________________________
+A aplicação Spring está configurada para se conectar a um banco de dados PostgreSQL usando as seguintes propriedades:
 
-- O que seria pacotes em Java?
-com.example.urlshortener.model
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/urlshortener
+spring.datasource.username=postgres
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.output.ansi.enabled=ALWAYS
+```
 
-___________________________________________________
+## Endpoints da API
 
-# Lombok
+### Encurtar URL
+
+- **POST** `/api/shorten`
+- Corpo da Requisição:
+  ```json
+  {
+    "url": "http://exemplo.com",
+    "expirationDate": "2024-12-31T23:59:59"
+  }
+  ```
+- Resposta: Retorna a URL encurtada.
+- Exemplo de resposta:
+
+  ```json
+  {
+    "createdAt": "2024-10-18T11:10:50.841085",
+    "updatedAt": null,
+    "id": 1,
+    "originalUrl": "http://exemplo.com",
+    "shortUrl": "FtSXgy",
+    "expirationDate": "2024-12-31T23:59:59"
+  }
+  ```
+
+### Redirecionar para a URL Original
+
+- **GET** `/{shortUrl}`
+- Redireciona para a URL original se a URL encurtada for válida e não expirada.
+- Exemplo GET: http://localhost:8080/api/FtSXgy
+
+## DTO - `UrlRequestDTO`
+
+Esta classe representa o objeto de transferência de dados para requisições de encurtamento de URL:
+
+```java
+package com.example.urlshortener.dto;
+
+import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public class UrlRequestDTO {
+
+  @NotBlank(message = "URL cannot be blank")
+  @Pattern(regexp = "^(http|https)://.*$", message = "Invalid URL format")
+  private String url;
+
+  private LocalDateTime expirationDate;
+
+  ...
+}
+```
+
+## Modelo - `Url`
+
+Esta classe representa a entidade da URL no banco de dados:
+
+```java
+package com.example.urlshortener.model;
+
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 @Entity
-@Data
-- Para que serve equals() e hashCode()?
+public class Url extends BaseEntity {
 
-____________________________________________________
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-Qual a diferença entre classe e interface?
-- No repository pq extendemos a interface JpaRepository
-Interfaces: UrlRepository é uma interface que estende JpaRepository, que é outra interface. Isso demonstra o uso de interfaces e polimorfismo.
+  @Column(nullable = false)
+  private String originalUrl;
 
-____________________________________________________
+  @Column(unique=true)
+  private String shortUrl;
 
-# Annotations para controllers
-@RequestParam
-@PathVariable
+  private LocalDateTime expirationDate;
 
-Annotations
-@Entity: Indica que a classe é uma entidade JPA.
-Injeção de Dependência com @Autowired: O Spring injeta automaticamente a instância de UrlRepository.
+  ...
 
-- Anotations @Configuration (roda primeiro) @Service  @Component / Qual a diferença
+}
+```
 
-____________________________________________________
+## Função `generateRandomString` do UrlService
 
-Optional<Url>
-O que é esse Optional e esse <> com um tipo dentro?
+### Descrição
 
-____________________________________________________
-
-Onde foi definido que a aplicação rodaria na porta 8080?
-
-____________________________________________________
-
-# Swagger / OpenAI
-http://localhost:8080/swagger-ui/index.html
-- O que são os squemas do que aparece embaixo?
-
-____________________________________________________
-
-Regex
-Para que serve
-Como usar?
-
-____________________________________________________
-
-# DTO: Data transfer object
-Os DTOs são usados para transferir dados entre diferentes partes da aplicação de forma segura e encapsulada.
+A função `generateRandomString` cria uma string aleatória composta por letras maiúsculas, letras minúsculas e dígitos numéricos. O comprimento da string gerada é determinado pelo parâmetro `length` passado para a função.
 
 
+## Comandos para Executar o Projeto
 
-- Diferença entre spring e spring boot
-- Perguntas de java (herança, polimorfismo, interface, ORMs)
-- Hibernate / implementa interface da JPA (interface, contrato)
+1. Limpar e construir o projeto com Maven:
+   ```bash
+   mvn clean install
+   ```
 
+2. Construir a imagem Docker:
+   ```bash
+   docker build -t url-shortener .
+   ```
 
-CVC - MongoDBOntem dia de estudo
-- Reunião Nelson: SonarQube - Exclusions - Rodar local
-- Git flow
+3. Executar o contêiner da aplicação:
+   ```bash
+   docker run -d -p 8080:8080 url-shortener
+   ```
 
-Termino hoje de tarde:
-- Enviar PRs hotfix para dev e staging
-- task Retorno do colaborador na listagem de alocações
+4. Executar o contêiner do PostgreSQL:
+   ```bash
+   docker run --name teste -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -e POSTGRES_DB=urlshortener -p 5432:5432 -d postgres:17
+   ```
 
+5. Executar a aplicação com o banco de dados:
+   ```bash
+   docker run --name my-app2 --link teste:db -e SPRING_DATASOURCE_URL=jdbc:postgresql://teste:5432/urlshortener -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=root -p 8080:8080 -d imgtest
+   ```
 
+## Licença
 
-
-_________________________________________________
-
-
-Desafio de system design - orquestarr um sistema
-
-- API, banco de dados, postgres, expiração de URL
-- Diferença entre spring framework e spring boot
-- Perguntas de java (herança, polimorfismo, interface, ORMs)
-- Hibernate - ORM / implementa interface da JPA (interface, contrato) 
-- SQL são mais lentos, mais engessados - 
-- JVM
-- Docker
-___________________________________________________
-
-Java / multithread
-
-
-
-mvn install - atualiza as dependencias
-
-
-
-docker run --name tesssst -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -e POSTGRES_DB=urlshortener -p 5432:5432 -d postgres:17
-
-
-docker run --name my-app --link tesssst -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/urlshortener -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=root -p 8080:8080 -d test
-
-docker run --name my-app2 --link tesssst:db -e SPRING_DATASOURCE_URL=jdbc:postgresql://tesssst:5432/urlshortener -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=root -p 8080:8080 -d test
-
-mvn clean install   
-docker build -t url-shortener .
-docker run -d -p 8080:8080 url-shortener  
+Este projeto está licenciado sob a Licença MIT.

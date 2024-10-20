@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class UrlRequestDto {
+public class UrlRequestDTO {
   @NotBlank(message = "URL cannot be blank")
   @Pattern(regexp = "^(http|https)://.*$", message = "Invalid URL format")
   private String url;
