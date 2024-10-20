@@ -1,3 +1,4 @@
+// Soli Deo gloria
 package com.example.urlshortener;
 
 import org.springframework.boot.SpringApplication;

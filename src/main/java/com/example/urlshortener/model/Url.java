@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "urls")
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 public class Url extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
