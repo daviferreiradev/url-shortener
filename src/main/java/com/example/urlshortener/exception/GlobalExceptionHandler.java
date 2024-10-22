@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
             HttpStatus.NOT_FOUND.value(),
             ex.getMessage(),
             request.getRequestURI());
-    return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UrlExpiredException.class)

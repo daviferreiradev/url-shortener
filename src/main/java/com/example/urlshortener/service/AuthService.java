@@ -22,10 +22,10 @@ public class AuthService {
   private final TokenService tokenService;
 
   public ResponseDTO login(LoginRequestDTO body) {
-    User user = repository.findByEmail(body.email())
+    User user = repository.findByEmail(body.getEmail())
         .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
-    if (!passwordEncoder.matches(body.password(), user.getPassword())) {
+    if (!passwordEncoder.matches(body.getPassword(), user.getPassword())) {
       throw new IllegalArgumentException("Credenciais inválidas");
     }
 
@@ -34,14 +34,14 @@ public class AuthService {
   }
 
   public ResponseDTO register(RegisterRequestDTO body) {
-    if (repository.findByEmail(body.email()).isPresent()) {
+    if (repository.findByEmail(body.getEmail()).isPresent()) {
       throw new UserAlreadyExistsException("Usuário já existe");
     }
 
     User newUser = new User();
-    newUser.setName(body.name());
-    newUser.setEmail(body.email());
-    newUser.setPassword(passwordEncoder.encode(body.password()));
+    newUser.setName(body.getName());
+    newUser.setEmail(body.getEmail());
+    newUser.setPassword(passwordEncoder.encode(body.getPassword()));
     repository.save(newUser);
 
     String token = tokenService.generateToken(newUser);
