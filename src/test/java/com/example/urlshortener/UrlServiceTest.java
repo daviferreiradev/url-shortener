@@ -41,10 +41,8 @@ public class UrlServiceTest {
     String originalUrl = "https://www.example.com";
     LocalDateTime expirationDate = LocalDateTime.now().plusDays(1);
 
-    // Simula que não há colisão de shortUrl
     when(urlRepository.findByShortUrl(anyString())).thenReturn(Optional.empty());
 
-    // Simula o comportamento do método save
     when(urlRepository.save(any(Url.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Url result = urlService.generateShortUrl(originalUrl, expirationDate);
@@ -54,7 +52,6 @@ public class UrlServiceTest {
     assertNotNull(result.getShortUrl());
     assertEquals(expirationDate, result.getExpirationDate());
 
-    // Verifica se o método save foi chamado
     verify(urlRepository, times(1)).save(any(Url.class));
   }
 
@@ -81,7 +78,7 @@ public class UrlServiceTest {
   void testGetAndValidateOriginalUrl_Expired() {
     String shortUrl = "abc123";
     String originalUrl = "https://www.example.com";
-    LocalDateTime expirationDate = LocalDateTime.now().minusDays(1); // Já expirada
+    LocalDateTime expirationDate = LocalDateTime.now().minusDays(1);
 
     Url url = new Url();
     url.setShortUrl(shortUrl);

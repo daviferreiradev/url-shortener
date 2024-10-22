@@ -23,7 +23,7 @@ public class TokenService {
       Algorithm algorithm = Algorithm.HMAC256(secret);
 
       String token = JWT.create()
-        .withIssuer("url-shortener") // quem está emitindo o token
+        .withIssuer("url-shortener")
         .withSubject(user.getEmail())
         .withExpiresAt(this.generateExpirationDate())
         .sign(algorithm);

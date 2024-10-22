@@ -2,6 +2,12 @@
 
 Este projeto é um serviço simples de encurtamento de URLs, desenvolvido em Java, Spring Boot e PostgreSQL.
 
+### Documentação Swagger
+
+Acesse a documentação interativa da API através do Swagger:
+
+- **URL**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
 ## Dockerfile
 
 A aplicação está empacotada utilizando o seguinte Dockerfile:
@@ -126,6 +132,7 @@ public class Url extends BaseEntity {
 A função `generateRandomString` cria uma string aleatória composta por letras maiúsculas, letras minúsculas e dígitos numéricos. O comprimento da string gerada é determinado pelo parâmetro `length` passado para a função.
 
 
+
 ## Comandos para Executar o Projeto
 
 1. Limpar e construir o projeto com Maven:
@@ -135,22 +142,27 @@ A função `generateRandomString` cria uma string aleatória composta por letras
 
 2. Construir a imagem Docker:
    ```bash
-   docker build -t url-shortener .
+   docker build -t url-shortener-app .
    ```
 
-3. Executar o contêiner da aplicação:
+3. Executar o contêiner do PostgreSQL:
    ```bash
-   docker run -d -p 8080:8080 url-shortener
+   docker run --name url-shortener-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -e POSTGRES_DB=urlshortener -p 5432:5432 -d postgres:17
    ```
 
-4. Executar o contêiner do PostgreSQL:
+4. Executar o contêiner da aplicação com o banco de dados:
    ```bash
-   docker run --name teste -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -e POSTGRES_DB=urlshortener -p 5432:5432 -d postgres:17
+   docker run --name url-shortener-container --link url-shortener-db:db -e SPRING_DATASOURCE_URL=jdbc:postgresql://url-shortener-db:5432/urlshortener -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=root -p 8080:8080 -d url-shortener-app
    ```
 
-5. Executar a aplicação com o banco de dados:
+5. Executar a aplicação e o banco de dados com `docker-compose`:
    ```bash
-   docker run --name my-app2 --link teste:db -e SPRING_DATASOURCE_URL=jdbc:postgresql://teste:5432/urlshortener -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=root -p 8080:8080 -d imgtest
+   docker-compose up
+   ```
+
+6. Parar e remover os contêineres com `docker-compose`:
+   ```bash
+   docker-compose down
    ```
 
 ## Licença
